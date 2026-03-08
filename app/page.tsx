@@ -1,244 +1,246 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/auth/AuthProvider';
-import { db } from '@/lib/firebase';
-import { 
-  collection, 
-  query, 
-  where, 
-  orderBy, 
-  onSnapshot, 
-  addDoc, 
-  updateDoc, 
-  deleteDoc, 
-  doc,
-  Timestamp 
-} from 'firebase/firestore';
-import { Document } from '@/types';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { formatDistanceToNow } from 'date-fns';
-import { FileSpreadsheet, Plus, Trash2, Edit2, LogOut } from 'lucide-react';
+import { Particles } from '@/components/ui/particles';
+import { ArrowRight, Calculator, Users, Zap, Shield, Globe, CheckCircle2 } from 'lucide-react';
 
-export default function Dashboard() {
-  const { user, loading: authLoading, signOut } = useAuth();
-  const [documents, setDocuments] = useState<Document[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editTitle, setEditTitle] = useState('');
-  const [deleteId, setDeleteId] = useState<string | null>(null);
+export default function LandingPage() {
   const router = useRouter();
+  const { user, loading } = useAuth();
 
+  // Redirect to dashboard if already logged in
   useEffect(() => {
-    if (!authLoading && !user) {
-      router.push('/auth');
+    if (!loading && user) {
+      router.push('/dashboard');
     }
-  }, [user, authLoading, router]);
+  }, [user, loading, router]);
 
-  useEffect(() => {
-    if (!user) return;
-
-    const documentsRef = collection(db, 'documents');
-    const q = query(
-      documentsRef,
-      where('owner_id', '==', user.id)
-    );
-
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const docs: Document[] = [];
-      snapshot.forEach((doc) => {
-        const data = doc.data();
-        docs.push({
-          id: doc.id,
-          title: data.title,
-          owner_id: data.owner_id,
-          created_at: data.created_at?.toDate().toISOString() || new Date().toISOString(),
-          updated_at: data.updated_at?.toDate().toISOString() || new Date().toISOString(),
-        });
-      });
-      // Sort in memory instead of in query
-      docs.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
-      setDocuments(docs);
-      setLoading(false);
-    });
-
-    return () => unsubscribe();
-  }, [user]);
-
-  const createDocument = async () => {
-    if (!user) return;
-
-    try {
-      const docRef = await addDoc(collection(db, 'documents'), {
-        title: 'Untitled Spreadsheet',
-        owner_id: user.id,
-        created_at: Timestamp.now(),
-        updated_at: Timestamp.now(),
-      });
-      router.push(`/doc/${docRef.id}`);
-    } catch (error) {
-      console.error('Error creating document:', error);
-    }
-  };
-
-  const startEdit = (doc: Document) => {
-    setEditingId(doc.id);
-    setEditTitle(doc.title);
-  };
-
-  const saveEdit = async () => {
-    if (!editingId || !editTitle.trim()) return;
-
-    try {
-      const docRef = doc(db, 'documents', editingId);
-      await updateDoc(docRef, {
-        title: editTitle,
-        updated_at: Timestamp.now(),
-      });
-    } catch (error) {
-      console.error('Error updating document:', error);
-    }
-
-    setEditingId(null);
-    setEditTitle('');
-  };
-
-  const deleteDocument = async () => {
-    if (!deleteId) return;
-
-    try {
-      await deleteDoc(doc(db, 'documents', deleteId));
-    } catch (error) {
-      console.error('Error deleting document:', error);
-    }
-
-    setDeleteId(null);
-  };
-
-  if (authLoading || loading) {
+  // Show loading while checking auth
+  if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-950">
-        <div className="animate-pulse text-slate-400">Loading...</div>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950">
+        <div className="flex items-center gap-3">
+          <div className="w-3 h-3 bg-purple-500 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+          <div className="w-3 h-3 bg-indigo-500 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+          <div className="w-3 h-3 bg-blue-500 rounded-full animate-bounce"></div>
+        </div>
       </div>
     );
   }
 
-  if (!user) return null;
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-950">
-      <div className="max-w-7xl mx-auto p-6">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-slate-100 mb-2">My Spreadsheets</h1>
-            <p className="text-slate-400">Welcome back, {user.displayName}</p>
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950 relative overflow-hidden">
+      <Particles />
+      
+      {/* Animated background */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-purple-900/20 via-transparent to-transparent animate-gradient"></div>
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-indigo-900/20 via-transparent to-transparent animate-gradient"></div>
+      
+      {/* Floating orbs */}
+      <div className="absolute top-20 left-20 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-float"></div>
+      <div className="absolute bottom-20 right-20 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl animate-float" style={{ animationDelay: '2s' }}></div>
+      <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-pink-500/10 rounded-full blur-3xl animate-float" style={{ animationDelay: '4s' }}></div>
+      
+      {/* Grid pattern */}
+      <div className="absolute inset-0 bg-[linear-gradient(rgba(168,85,247,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(168,85,247,0.03)_1px,transparent_1px)] bg-[size:50px_50px]"></div>
+
+      {/* Navigation */}
+      <nav className="relative z-10 border-b border-slate-800/50 bg-slate-900/50 backdrop-blur-xl">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="p-2 rounded-lg bg-gradient-to-br from-purple-600 to-indigo-600">
+              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
+              </svg>
+            </div>
+            <span className="text-xl font-bold bg-gradient-to-r from-purple-400 to-indigo-400 bg-clip-text text-transparent">
+              CollabSheet
+            </span>
           </div>
-          <Button onClick={signOut} variant="outline" className="border-slate-700 text-slate-300 hover:bg-slate-800">
-            <LogOut className="w-4 h-4 mr-2" />
-            Sign Out
+          <Button 
+            onClick={() => router.push('/auth')}
+            className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 shadow-lg hover:shadow-xl transition-all duration-300"
+          >
+            Get Started
+            <ArrowRight className="w-4 h-4 ml-2" />
           </Button>
         </div>
+      </nav>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <Card
-            onClick={createDocument}
-            className="border-2 border-dashed border-slate-700 bg-slate-900/30 hover:bg-slate-800/50 hover:border-indigo-500 transition-all cursor-pointer group"
-          >
-            <CardContent className="flex flex-col items-center justify-center h-48">
-              <div className="w-16 h-16 rounded-full bg-indigo-600/20 flex items-center justify-center mb-4 group-hover:bg-indigo-600/30 transition-colors">
-                <Plus className="w-8 h-8 text-indigo-400" />
-              </div>
-              <p className="text-slate-300 font-medium">Create New Spreadsheet</p>
-            </CardContent>
-          </Card>
-
-          {documents.map((doc) => (
-            <Card
-              key={doc.id}
-              className="border-slate-800 bg-slate-900/50 hover:bg-slate-800/70 transition-all group cursor-pointer"
-              onClick={() => router.push(`/doc/${doc.id}`)}
+      {/* Hero Section */}
+      <section className="relative z-10 max-w-7xl mx-auto px-6 pt-20 pb-32">
+        <div className="text-center space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-1000">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-purple-500/10 border border-purple-500/20 backdrop-blur-sm">
+            <span className="text-sm text-purple-300 font-medium">Real-time Collaboration Made Simple</span>
+          </div>
+          
+          <h1 className="text-6xl md:text-7xl font-bold leading-tight">
+            <span className="bg-gradient-to-r from-purple-400 via-indigo-400 to-blue-400 bg-clip-text text-transparent animate-gradient">
+              Spreadsheets
+            </span>
+            <br />
+            <span className="text-slate-100">That Work Together</span>
+          </h1>
+          
+          <p className="text-xl text-slate-400 max-w-2xl mx-auto leading-relaxed">
+            Create, collaborate, and compute in real-time. The modern spreadsheet experience with powerful formulas and seamless team collaboration.
+          </p>
+          
+          <div className="flex items-center justify-center gap-4 pt-4">
+            <Button 
+              onClick={() => router.push('/auth')}
+              size="lg"
+              className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 text-lg px-8 py-6 group"
             >
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <FileSpreadsheet className="w-8 h-8 text-indigo-400 mb-2" />
-                  <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="h-8 w-8 p-0 text-slate-400 hover:text-slate-100"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        startEdit(doc);
-                      }}
-                    >
-                      <Edit2 className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="h-8 w-8 p-0 text-red-400 hover:text-red-300"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setDeleteId(doc.id);
-                      }}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </div>
-                {editingId === doc.id ? (
-                  <div onClick={(e) => e.stopPropagation()}>
-                    <Input
-                      value={editTitle}
-                      onChange={(e) => setEditTitle(e.target.value)}
-                      onBlur={saveEdit}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') saveEdit();
-                        if (e.key === 'Escape') setEditingId(null);
-                      }}
-                      className="bg-slate-800 border-slate-700 text-slate-100"
-                      autoFocus
-                    />
-                  </div>
-                ) : (
-                  <CardTitle className="text-slate-100">{doc.title}</CardTitle>
-                )}
-                <CardDescription className="text-slate-500">
-                  Updated {formatDistanceToNow(new Date(doc.updated_at), { addSuffix: true })}
-                </CardDescription>
-              </CardHeader>
-            </Card>
-          ))}
+              Start Creating Free
+              <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+            </Button>
+            <Button 
+              onClick={() => router.push('/auth')}
+              size="lg"
+              variant="outline"
+              className="border-slate-700/50 bg-slate-900/50 backdrop-blur-sm text-slate-300 hover:bg-purple-500/10 hover:border-purple-500/50 transition-all duration-300 text-lg px-8 py-6"
+            >
+              View Demo
+            </Button>
+          </div>
         </div>
 
-        {documents.length === 0 && (
-          <div className="text-center py-12">
-            <FileSpreadsheet className="w-16 h-16 text-slate-700 mx-auto mb-4" />
-            <p className="text-slate-500 text-lg">No spreadsheets yet. Create your first one!</p>
+        {/* Feature Preview */}
+        <div className="mt-20 relative">
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent z-10"></div>
+          <div className="rounded-2xl border border-slate-800/50 bg-slate-900/50 backdrop-blur-xl p-2 shadow-2xl hover-glow animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-300">
+            <div className="aspect-video rounded-lg bg-gradient-to-br from-purple-900/20 to-indigo-900/20 flex items-center justify-center relative overflow-hidden">
+              <div className="absolute inset-0 bg-[linear-gradient(rgba(168,85,247,0.1)_1px,transparent_1px),linear-gradient(90deg,rgba(168,85,247,0.1)_1px,transparent_1px)] bg-[size:40px_40px]"></div>
+              <div className="relative z-10 text-center space-y-4">
+                <div className="w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br from-purple-600 to-indigo-600 flex items-center justify-center animate-float">
+                  <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
+                  </svg>
+                </div>
+                <p className="text-slate-400 text-lg">Interactive spreadsheet preview</p>
+              </div>
+            </div>
           </div>
-        )}
-      </div>
+        </div>
+      </section>
 
-      <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
-        <AlertDialogContent className="bg-slate-900 border-slate-800">
-          <AlertDialogHeader>
-            <AlertDialogTitle className="text-slate-100">Delete Spreadsheet</AlertDialogTitle>
-            <AlertDialogDescription className="text-slate-400">
-              Are you sure you want to delete this spreadsheet? This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel className="bg-slate-800 text-slate-300 border-slate-700">Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={deleteDocument} className="bg-red-600 hover:bg-red-700">
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {/* Features Section */}
+      <section className="relative z-10 max-w-7xl mx-auto px-6 py-20">
+        <div className="text-center mb-16">
+          <h2 className="text-4xl font-bold text-slate-100 mb-4">
+            Everything you need to <span className="bg-gradient-to-r from-purple-400 to-indigo-400 bg-clip-text text-transparent">collaborate</span>
+          </h2>
+          <p className="text-slate-400 text-lg">Powerful features designed for modern teams</p>
+        </div>
+
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[
+            {
+              icon: <Zap className="w-6 h-6" />,
+              title: 'Real-time Sync',
+              description: 'See changes instantly as your team collaborates. No refresh needed.',
+              color: 'from-yellow-600 to-orange-600'
+            },
+            {
+              icon: <Users className="w-6 h-6" />,
+              title: 'Live Presence',
+              description: 'Know who\'s online and what they\'re editing in real-time.',
+              color: 'from-blue-600 to-cyan-600'
+            },
+            {
+              icon: <Calculator className="w-6 h-6" />,
+              title: '20+ Functions',
+              description: 'Powerful formula engine with SUM, AVERAGE, IF, and more.',
+              color: 'from-purple-600 to-pink-600'
+            },
+            {
+              icon: <Shield className="w-6 h-6" />,
+              title: 'Secure & Private',
+              description: 'Your data is encrypted and secure with Firebase.',
+              color: 'from-green-600 to-emerald-600'
+            },
+            {
+              icon: <Globe className="w-6 h-6" />,
+              title: 'Share Anywhere',
+              description: 'One-click sharing with anyone, anywhere in the world.',
+              color: 'from-indigo-600 to-purple-600'
+            },
+            {
+              icon: <CheckCircle2 className="w-6 h-6" />,
+              title: 'Auto-save',
+              description: 'Never lose your work. Everything saves automatically.',
+              color: 'from-teal-600 to-cyan-600'
+            }
+          ].map((feature, index) => (
+            <div 
+              key={index}
+              className="group p-6 rounded-2xl border border-slate-800/50 bg-slate-900/50 backdrop-blur-sm hover:bg-slate-800/70 hover:border-purple-500/30 transition-all duration-300 hover-glow animate-in fade-in slide-in-from-bottom-4"
+              style={{ animationDelay: `${index * 100}ms` }}
+            >
+              <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${feature.color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
+                {feature.icon}
+              </div>
+              <h3 className="text-xl font-semibold text-slate-100 mb-2 group-hover:text-purple-300 transition-colors">
+                {feature.title}
+              </h3>
+              <p className="text-slate-400 leading-relaxed">
+                {feature.description}
+              </p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="relative z-10 max-w-4xl mx-auto px-6 py-20">
+        <div className="rounded-3xl border border-slate-800/50 bg-slate-900/50 backdrop-blur-xl p-12 text-center space-y-6 hover-glow relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-indigo-500/5"></div>
+          <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl animate-glow"></div>
+          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-indigo-500/10 rounded-full blur-3xl animate-glow" style={{ animationDelay: '1.5s' }}></div>
+          
+          <div className="relative z-10">
+            <h2 className="text-4xl font-bold text-slate-100 mb-4">
+              Ready to start collaborating?
+            </h2>
+            <p className="text-xl text-slate-400 mb-8">
+              Join thousands of teams already using CollabSheet
+            </p>
+            <Button 
+              onClick={() => router.push('/auth')}
+              size="lg"
+              className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 text-lg px-12 py-6 group"
+            >
+              Get Started for Free
+              <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="relative z-10 border-t border-slate-800/50 bg-slate-900/50 backdrop-blur-sm mt-20">
+        <div className="max-w-7xl mx-auto px-6 py-8">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="p-1.5 rounded-lg bg-gradient-to-br from-purple-600 to-indigo-600">
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
+                </svg>
+              </div>
+              <span className="text-sm text-slate-400">© 2026 CollabSheet.</span>
+            </div>
+            <div className="flex items-center gap-6 text-sm text-slate-400">
+              <a href="#" className="hover:text-purple-400 transition-colors">Privacy</a>
+              <a href="#" className="hover:text-purple-400 transition-colors">Terms</a>
+              <a href="#" className="hover:text-purple-400 transition-colors">Contact</a>
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
