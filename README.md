@@ -2,11 +2,6 @@
 
 A lightweight, real-time collaborative spreadsheet application built with Next.js, TypeScript, Tailwind CSS, and Firebase.
 
-## 🚀 Live Demo
-
-**Live URL:** [Your Vercel URL here]
-
-**Demo Video:** [Your video link here]
 
 ## 📋 Features Implemented
 
